@@ -4,18 +4,19 @@
 #include <Windows.h>
 #include <TlHelp32.h>
 #include "Process.h"
-
+#include "Util.h"
+#include "Instruction.h"
 
 const wchar_t* ERROR_CMD = L"'%s'는 실행할 수 있는 프로그램이 아닙니다. \n";
 const wchar_t* SEPS = L" ,\t\n";
 
-CProcess* CProcess::cProcess=nullptr;
+CProcess* CProcess::cProcess;
+CInstruction* m_instruction;
 
 CProcess::CProcess()
 {
 	_wsetlocale ( LC_ALL , L"Korean" );
 	setCurrentDir ( L"c:\\windows" );
-	m_instruction = new CInstruction();
 }
 
 CProcess* CProcess::getInstancePtr()
@@ -23,6 +24,7 @@ CProcess* CProcess::getInstancePtr()
 		if ( cProcess == nullptr )
 		{
 			cProcess = new CProcess();
+			m_instruction = new CInstruction();
 		}
 		return cProcess;
 }
@@ -44,11 +46,13 @@ void CProcess::setCurrentDir ( wchar_t* path )
 
 	if ( result == 0 )
 	{
-		wprintf ( L"지정된 경로를 찾을 수 없습니다." );
+		wprintf ( L"지정된 경로를 찾을 수 없습니다.\n" );
 	}
 	else
 	{
-		m_currentDir = path;
+		wchar_t tempPath[Util::MAX_PATH_LEN];
+		GetCurrentDirectory( Util::MAX_PATH_LEN, tempPath );
+		wcscpy_s ( m_currentDir, Util::ArrToPtr ( tempPath ) );
 	}
 }
 
@@ -82,41 +86,43 @@ bool CProcess::CommandProcessing()
 {
 	wprintf ( L"Yoonsung-Shell : %s >> ", m_currentDir );
 	_getws_s ( m_GCommandString );
-	
-	if ( !_wcsicmp ( m_GCommandString, L"exit" ) )
+
+	if ( Util::IsSameCharacter( m_GCommandString, L"exit" ) )
 		return false;
-	
+
+	wchar_t m_GCommandString_Copy[MAX_STR_LEN];
+	wcscpy_s (m_GCommandString_Copy , m_GCommandString);
+
 	wchar_t * nextToken = NULL;
 	int tokenNum = 0;
-	wchar_t * token = wcstok_s ( m_GCommandString, SEPS, &nextToken );
+	wchar_t * token = wcstok_s ( m_GCommandString_Copy, SEPS, &nextToken );
 
 	while ( NULL != token )
 	{
 		wcscpy_s ( m_GCommandTokenList[tokenNum++], token );
 		token = wcstok_s ( NULL, SEPS, &nextToken );
 	}
-
-	bool checkResult = m_instruction->CheckCommand ( m_GCommandTokenList[0], tokenNum );
-
-	if ( checkResult )
-	{
-		/*TODO :: 통과 이후 함수재호출 ( 상세스펙 확인 )
-		
-		//wchar_t* exeCmd = m_instruction->GetExecuteCmd ( m_GCommandTokenList );
-		
-		if ( exeCmd == nullptr )
-			wprintf(L"명령어가 잘못되었네요");
-			//명령어가 잘못되었네요
-		else
-			Create ( exeCmd );
-		*/
-		Create ( m_GCommandTokenList[0] );
+	
+	bool exeCmd = m_instruction->GetExecuteCmd ( m_GCommandTokenList, tokenNum );
+	
+	if ( !exeCmd ) {
+		Create ( m_GCommandString );
 	}	
 
 	return true;
 }
 
 int CProcess::ShowCurrentProcessList()
+{
+	return UseProcessList ( PS_SHOWLIST, NULL );
+}
+
+int CProcess::KillProcess ( wchar_t* target )
+{
+	return UseProcessList ( PS_KILL, target );
+}
+
+int CProcess::UseProcessList ( PS_COMMAND command, wchar_t* target )
 {
 	HANDLE hProcessSnap = CreateToolhelp32Snapshot ( TH32CS_SNAPPROCESS, 0 );
 
@@ -132,15 +138,56 @@ int CProcess::ShowCurrentProcessList()
 		CloseHandle( hProcessSnap );
 		return 0;
 	}
+	
 
-	do
+	if ( command == PS_SHOWLIST )
 	{
-		wprintf(L"%d: %s\n", pe32.th32ProcessID , pe32.szExeFile);
+		do
+		{
+			wprintf ( L"%d: %s\n", pe32.th32ProcessID , pe32.szExeFile );
+		}
+		while ( Process32Next ( hProcessSnap, &pe32 ) );
 	}
-	while ( Process32Next ( hProcessSnap, &pe32 ) );
+	else if ( command == PS_KILL )
+	{
+		UINT ExitCode = 0;
+		bool result = false;
+		do
+		{
+			if ( !_wcsicmp ( pe32.szExeFile, target ) )
+			{
+				result = _KillProcess ( pe32.th32ProcessID,ExitCode );
+			}
+		}
+		while ( Process32Next ( hProcessSnap, &pe32 ) );
+
+		if ( result )
+		{
+			wprintf ( L"[SUCCESS] Process '%s' Killed\n", target );
+		}
+		else
+		{
+			wprintf ( L"[FAIL] Exceute Fail\n" );
+		}
+	}
+
 
 	CloseHandle ( hProcessSnap );
 	
 	return 1;
+}
 
+bool CProcess::_KillProcess ( unsigned long dwPID, unsigned int  ExitCode ) 
+{
+	bool isKilled = false;
+
+	HANDLE hProcess = OpenProcess ( PROCESS_TERMINATE, FALSE, dwPID );
+	if ( hProcess == NULL )
+		;
+	else if ( TerminateProcess ( hProcess, ExitCode ) )
+		isKilled = true;
+
+	CloseHandle ( hProcess );
+
+	return isKilled;
 }
