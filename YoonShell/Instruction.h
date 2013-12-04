@@ -23,5 +23,6 @@ private:
 	void cmdFDEL(wchar_t * target);
 	void cmdCAT(wchar_t * target);
 	bool IsFileExist(wchar_t * path, wchar_t* fileName);
+	void cmdREN(wchar_t* srcName, wchar_t* destName);
 	//void saveFile (CString resultTxt, wchar_t* fileName);
 };

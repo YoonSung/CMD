@@ -31,7 +31,7 @@ bool CInstruction::GetExecuteCmd ( wchar_t arr[][256] , int tokenNum )
 		if ( tokenNum == 1)
 			cmdDIR(NULL);
 		else if ( Util::IsSameCharacter( arr[1], L">" ) )
-			cmdPWD(arr[2]);
+			cmdDIR(arr[2]);
 
 	} else if ( Util::IsSameCharacter( arr[0], L"ls" ) && tokenNum == 1 ) {
 		cmdLS(NULL);
@@ -49,6 +49,8 @@ bool CInstruction::GetExecuteCmd ( wchar_t arr[][256] , int tokenNum )
 		cmdFDEL(arr[1]);
 	} else if ( Util::IsSameCharacter( arr[0], L"cat") && tokenNum == 2 ) {
 		cmdCAT(arr[1]);
+	} else if ( Util::IsSameCharacter( arr[0], L"ren") && tokenNum <= 3 ) {
+		cmdREN(arr[1], arr[2]);
 	} else {
 		return false;
 	}
@@ -167,13 +169,17 @@ void CInstruction::cmdDIR(wchar_t * fileName)
 
 		if (FILE_ATTRIBUTE_DIRECTORY & findFileData.dwFileAttributes )
 		{
-
 			wchar_t buf[100];
+			ZeroMemory(buf, 0);
+
 			wsprintf(buf, L"<DIR>                %s\n", findFileData.cFileName);
+
 
 			if ( isRedirection )
 			{
-				wcsncat_s ( resultTxt, buf, sizeof(dirPath) );
+				//wprintf(L"buf : %s\n", buf);
+//				wprintf(L"buf size : %s\n", sizeof(buf));
+				wcsncat_s ( resultTxt, buf,sizeof(buf)+1 );
 			}
 			else
 			{
@@ -191,8 +197,14 @@ void CInstruction::cmdDIR(wchar_t * fileName)
 	wprintf ( L"               %d개 파일\n", totalFileNum);
 	wprintf ( L"               %d개 디렉터리\n", totalDirectoryNum);
 
-	//if ( isRedirection )
-	//	;
+	if ( isRedirection )
+	{
+		CString a;
+		a = resultTxt;
+
+		//saveFile(a, fileName);
+	}
+		
 
 	FindClose ( hFind );
 }
@@ -358,6 +370,28 @@ void CInstruction::cmdFDEL(wchar_t * target)
 			wprintf(L"폴더는 삭제할 수 없습니다.\n");
 			break;
 	}
+}
+
+void CInstruction::cmdREN(wchar_t* srcName, wchar_t* destName)
+{
+	if ( Util::IsSameCharacter(srcName, destName) )
+	{
+		wprintf_s(L"rename 전, 후의 이름이 같습니다! 전기를 아낍시다!\n");
+		return;
+	}
+
+	if (!MoveFile(srcName, destName))
+	{
+		wprintf_s(L"Error! CODE : %d \n", GetLastError());
+		switch(GetLastError())
+		{
+		case 2:
+			wprintf_s(L"명령어 인자가 잘못되었습니다.\n");
+			break;
+		}
+	}
+
+	return;
 }
 
 void CInstruction::cmdCAT(wchar_t * target)
