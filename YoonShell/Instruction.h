@@ -5,9 +5,7 @@
 
 enum OPTION {
 	ASTERISK,
-	ASTERISK_HEAD,
-	ASTERISK_MIDDLE,
-	ASTERISK_TAIL,
+	PIPELINE,
 	REDIRECT,
 	NONE,
 };
@@ -29,8 +27,9 @@ private:
 	void cmdPS(wchar_t * option);
 	void cmdKILL(wchar_t * target);
 	void cmdFDEL(wchar_t * target);
-	void cmdCAT(wchar_t * target);
+	void cmdCAT(wchar_t * target, OPTION cmdOption, wchar_t* additionalCmd);
 	bool IsFileExist(wchar_t * path, wchar_t* fileName);
 	void cmdREN(wchar_t* srcName, wchar_t* destName);
-	//void saveFile (CString resultTxt, wchar_t* fileName);
+	void saveFile (CString resultTxt, wchar_t* fileName);
+	void CatTextFile ( wchar_t* fileName, OPTION cmdOption, wchar_t* additionalCmd );
 };

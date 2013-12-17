@@ -36,20 +36,32 @@ bool CInstruction::GetExecuteCmd ( wchar_t arr[][256] , int tokenNum )
 
 	} else if ( Util::IsSameCharacter( arr[0], L"ls" ) && tokenNum == 1 ) {
 		cmdLS(NULL);
+
 	} else if ( Util::IsSameCharacter( arr[0], L"ps" ) && tokenNum == 1 ) {
 		cmdPS(NULL);
+
 	} else if ( Util::IsSameCharacter( arr[0], L"kill" ) && tokenNum == 2 ) {
 		cmdKILL(arr[1]);
+
 	} else if ( Util::IsSameCharacter( arr[0], L"md" ) && tokenNum == 2 ) {
 		CreateDirectory ( arr[1], NULL );
+
 	} else if ( Util::IsSameCharacter( arr[0], L"rd" ) && tokenNum == 2 ) {
 		RemoveDirectory ( arr[1] );
+
 	} else if ( Util::IsSameCharacter( arr[0], L"copy") && tokenNum <= 3 ) {
 		cmdCOPY( arr[1], arr[2]);
+
 	} else if ( Util::IsSameCharacter( arr[0], L"del") && tokenNum == 2 ) {
 		cmdFDEL(arr[1]);
-	} else if ( Util::IsSameCharacter( arr[0], L"cat") && tokenNum == 2 ) {
-		cmdCAT(arr[1]);
+
+	} else if ( Util::IsSameCharacter( arr[0], L"cat") && tokenNum <= 4 ) {
+		if ( tokenNum == 2)
+			cmdCAT(arr[1], NONE, NULL);
+		else if ( Util::IsSameCharacter( arr[2], L"|") && tokenNum == 4 )
+			cmdCAT(arr[1], PIPELINE, arr[3]);
+		else
+			wprintf(L"CAT명령어의 잘못된 사용입니다. 다시한번 확인해 주세요.\n");
 	} else if ( Util::IsSameCharacter( arr[0], L"ren") && tokenNum <= 3 ) {
 		cmdREN(arr[1], arr[2]);
 	} else {
@@ -372,7 +384,7 @@ void CInstruction::cmdKILL(wchar_t * target)
 	m_Process->KillProcess(target);
 }
 
-void saveFile(CString resultTxt, wchar_t* fileName)
+void CInstruction::saveFile(CString resultTxt, wchar_t* fileName)
 {
 	//wprintf(L"savefile : %s\n", resultTxt.GetString());
 	//wprintf(L"size : %d\n", resultTxt.GetLength()*sizeof(wchar_t));
@@ -542,7 +554,7 @@ void CInstruction::cmdREN(wchar_t* srcName, wchar_t* destName)
 	return;
 }
 
-void CInstruction::cmdCAT(wchar_t * target)
+void CInstruction::cmdCAT(wchar_t * target, OPTION cmdOption, wchar_t* additionalCmd)
 {
 	wchar_t path [ MAX_PATH ];
 	GetCurrentDirectory ( MAX_PATH, path );
@@ -563,7 +575,92 @@ void CInstruction::cmdCAT(wchar_t * target)
 	
 	fileData[numOfByteRead/sizeof(wchar_t)] = 0;
 
-	wprintf(L"%s\n", fileData);
+	if ( cmdOption == NONE )
+	{
+		CatTextFile ( target, NONE, NULL );
+	}
+	else
+	{
+		CatTextFile ( target, PIPELINE, additionalCmd );
+	}
 
+
+	wprintf(L"%s\n", fileData);
+	 
 	CloseHandle(hLoadFile);
+}
+
+void CInstruction::CatTextFile ( wchar_t* fileName, OPTION cmdOption, wchar_t* additionalCmd )
+{
+	TCHAR cmdStringWithOptions[100] = {0,};
+	BOOL isRun;
+
+	if ( cmdOption == PIPELINE )
+	{
+		//Create Unnamed pipe
+		HANDLE hReadPipe, hWritePipe;
+
+		SECURITY_ATTRIBUTES pipeSA = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
+
+		CreatePipe(&hReadPipe, &hWritePipe, &pipeSA, 0);
+
+		//process type을 위한 선언
+		STARTUPINFO siCat = {0,};
+		PROCESS_INFORMATION piCat;
+		siCat.cb = sizeof(siCat);
+
+		siCat.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+		siCat.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+		siCat.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+		siCat.dwFlags |=STARTF_USESTDHANDLES;
+
+		_tcscpy_s ( cmdStringWithOptions, L"type");
+		_stprintf_s ( cmdStringWithOptions, _T("%s %s"), cmdStringWithOptions, fileName);
+
+		isRun = CreateProcess ( NULL, cmdStringWithOptions, NULL, NULL, TRUE, 0, NULL, NULL, &siCat, &piCat );
+
+		CloseHandle (piCat.hThread);
+		CloseHandle (hWritePipe);
+
+
+
+
+
+		//process sort를 위한 선언
+		STARTUPINFO siSort = {0,};
+		PROCESS_INFORMATION piSort;
+		siSort.cb = sizeof(siSort);
+
+		siSort.hStdInput = hReadPipe; //입력 리다이렉션
+		siCat.hStdError = GetStdHandle(STD_ERROR_HANDLE);
+		siCat.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+		siCat.dwFlags |=STARTF_USESTDHANDLES;
+
+		isRun = CreateProcess ( NULL, additionalCmd, NULL, NULL, TRUE, 0, NULL, NULL, &siSort, &piSort );
+
+		CloseHandle (piSort.hThread);
+		CloseHandle (hReadPipe);
+
+		WaitForSingleObject ( piCat.hProcess, INFINITE );
+		WaitForSingleObject ( piSort.hProcess, INFINITE );
+
+		CloseHandle ( piCat.hProcess );
+		CloseHandle ( piSort.hProcess );
+	}
+	else
+	{
+		_tcscpy_s ( cmdStringWithOptions, L"type");
+		_stprintf_s ( cmdStringWithOptions, _T("%s %s"), cmdStringWithOptions, fileName);
+
+		STARTUPINFO si = {0, };
+		PROCESS_INFORMATION pi;
+		si.cb = sizeof(si);
+
+		isRun = CreateProcess ( NULL, cmdStringWithOptions, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi );
+	
+		WaitForSingleObject ( pi.hProcess, INFINITE );
+
+		CloseHandle ( pi.hProcess );
+		CloseHandle ( pi.hProcess );
+	}
 }
