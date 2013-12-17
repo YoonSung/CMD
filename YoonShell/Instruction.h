@@ -3,6 +3,14 @@
 #include "stdafx.h"
 #include "Process.h"
 
+enum OPTION {
+	ASTERISK,
+	ASTERISK_HEAD,
+	ASTERISK_MIDDLE,
+	ASTERISK_TAIL,
+	REDIRECT,
+	NONE,
+};
 
 class CInstruction
 {
@@ -16,7 +24,7 @@ private:
 	void cmdCD(wchar_t arr[][256], int tokenNum);
 	void cmdPWD(wchar_t * fileName);
 	void cmdCOPY(wchar_t* source, wchar_t* target);
-	void cmdDIR(wchar_t * fileName);
+	void CInstruction::cmdDIR(OPTION cmdOption, wchar_t * fileName);
 	void cmdLS(wchar_t * option);
 	void cmdPS(wchar_t * option);
 	void cmdKILL(wchar_t * target);

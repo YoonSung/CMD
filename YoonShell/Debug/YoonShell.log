@@ -1,14 +1,8 @@
-﻿빌드 시작: 2013-12-04 오전 12:03:03
+﻿빌드 시작: 2013-12-17 오후 2:52:22
      1>2 노드의 "C:\Users\YoonSung\Documents\Visual Studio 2012\Projects\WindowLab\termProject\CMD\YoonShell\YoonShell.vcxproj" 프로젝트(Build 대상)입니다.
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yc"stdafx.h" /Fp"Debug\YoonShell.pch" /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
-         stdafx.cpp
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"Debug\YoonShell.pch" /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt Instruction.cpp Process.cpp Util.cpp YoonShell.cpp
-         YoonShell.cpp
-         Util.cpp
-         Process.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MTd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"stdafx.h" /Fp"Debug\YoonShell.pch" /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt Instruction.cpp
          Instruction.cpp
-         코드를 생성하고 있습니다...
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\YoonSung\Documents\Visual Studio 2012\Projects\WindowLab\termProject\CMD\YoonShell\Debug\YoonShell.exe" /INCREMENTAL /NOLOGO /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /manifestinput:"C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\Include\Manifest\dpiaware.manifest" /DEBUG /PDB:"C:\Users\YoonSung\Documents\Visual Studio 2012\Projects\WindowLab\termProject\CMD\YoonShell\Debug\YoonShell.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\YoonSung\Documents\Visual Studio 2012\Projects\WindowLab\termProject\CMD\YoonShell\Debug\YoonShell.lib" /MACHINE:X86 Debug\Instruction.obj
          Debug\Process.obj
@@ -20,4 +14,4 @@
 
 빌드했습니다.
 
-경과 시간: 00:00:08.64
+경과 시간: 00:00:00.91
